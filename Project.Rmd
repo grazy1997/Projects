@@ -1,0 +1,79 @@
+---
+title: "Project"
+output: html_document
+---
+
+
+```{r}
+library(rpart)
+library(randomForest)
+library(caret)
+library(lattice)
+library(ggplot2)
+library(rpart.plot)
+
+```
+
+```{r}
+set.seed(1234)
+```
+
+
+```{r}
+trainingset <- read.csv("pml-training.csv", na.strings = c("NA", ""))
+testingset  <- read.csv("pml-testing.csv", na.strings = c("NA", ""))
+```
+
+```{r}
+trainingset<-trainingset[,colSums(is.na(trainingset)) == 0]
+testingset <-testingset[,colSums(is.na(testingset)) == 0]
+```
+
+```{r}
+trainingset   <-trainingset[,-c(1:7)]
+testingset <-testingset[,-c(1:7)]
+```
+
+```{r}
+traintrainset <- createDataPartition(y=trainingset$classe, p=0.75, list=FALSE)
+TrainTrainingSet <- trainingset[traintrainset, ] 
+TestTrainingSet <- trainingset[-traintrainset, ]
+
+```
+
+```{r}
+plot(TrainTrainingSet$classe, col="yellow", main="Plot of levels of variable classe within the TrainTrainingSet data set", xlab="classe", ylab="Frequency")
+```
+
+```{r}
+model1 <- rpart(classe ~ ., data=TrainTrainingSet, method="class")
+
+prediction1 <- predict(model1, TestTrainingSet, type = "class")
+
+# Plot the Decision Tree
+rpart.plot(model1, main="Classification Tree", extra=102, under=TRUE, faclen=0)
+```
+
+```{r}
+library(e1071)
+confusionMatrix(prediction1, TestTrainingSet$classe)
+```
+
+```{r}
+model2 <- randomForest(classe ~. , data=TrainTrainingSet, method="class")
+# Predicting:
+prediction2 <- predict(model2, TestTrainingSet, type = "class")
+
+# Test results on TestTrainingSet data set:
+confusionMatrix(prediction2, TestTrainingSet$classe)
+```
+
+```{r}
+# predict outcome levels on the original Testing data set using Random Forest algorithm
+predictfinal <- predict(model2, testingset, type="class")
+predictfinal
+```
+
+
+
+
